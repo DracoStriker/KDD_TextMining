@@ -3,7 +3,7 @@ import html
 import requests
 import os
 
-genres = ['action', 'romance']
+genres = ['romance', 'mistery']
 nMoviesPages = 20 # 50 movies per page (20*50==1000 movies)
 nReviews = 100 # 10 reviews per page (100*10==1000 reviews/movie)
 

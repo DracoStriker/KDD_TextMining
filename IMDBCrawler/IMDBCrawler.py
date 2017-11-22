@@ -31,7 +31,7 @@ for genre in genres:
             n = 0
             for review in reviews:
                 with open("%s/%s_%s.txt" % (genre, movie, i+n), 'w+') as file:
-                    file.write(html.unescape(re.sub('<[^<]+?>', '', review)).encode(errors='replace').decode(errors='ignore'))
+                    file.write(html.unescape(re.sub('<[^<]+?>', '', review)).encode('cp850', errors='replace').decode('cp850'))
                 n += 1
             i += 10
             if i == nReviews:

@@ -68,9 +68,12 @@ dtm <- removeSparseTerms(dtm, 0.95)
 
 # Document term matrix to dataframe
 train.d <- as.data.frame(as.matrix(dtm))
+                         
+# Shuffle data
+train.d <- train.d[sample(nrow(train.d)),]
 
 # Generate lexicon
-#lexicon <- names(train.d)
+lexicon <- names(train.d)
 
 # Class vector
 c.vector <- c(c(rep(0, length(mistery.train)), c(rep(1, length(romance.train)))))
@@ -82,3 +85,7 @@ train.d <- cbind(train.d, class=c.vector)
 #info.terms <- information.gain(class ~., train.d)
 #which(info.terms$attr_importance > info.min)
 #rownames(info.terms)
+
+# Train set
+#test.d <- as.data.frame(as.matrix(DocumentTermMatrix(<test set here>, control = list(dictionary = lexicon))))
+

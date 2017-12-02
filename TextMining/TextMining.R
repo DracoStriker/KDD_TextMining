@@ -68,6 +68,8 @@ romance.train <- preprocess.simple(romance.train)
 # Concat corpus train
 overall.train <- Corpus(VectorSource(c(content(mistery.train), content(romance.train))))
 
+
+
 # Generate document term matrix
 # Words between 4 and 15 letters
 # 3 global occurences
@@ -96,14 +98,24 @@ lexicon <- names(train.d)
 train.c <- c(c(rep("Mistery", length(mistery.train)), c(rep("Romance", length(romance.train)))))
 
 # Shuffle class data (same seed as train data)
-set.seed(423)
-train.c <- train.c[sample(1:nrow(train.c)),]
+#set.seed(423)
+#train.c <- train.c[sample(1:nrow(train.c)),]
 
 # Bind class feature
-#train.dc <- cbind(train.d, class=train.c)
+train.dc <- cbind(train.d, class=train.c)
 
 # Shuffle data
-#train.dc <- train.dc[sample(nrow(train.dc)),]
+train.dc <- train.dc[sample(nrow(train.dc)),]
+
+#Remove zero lines! 
+sum.train <- (c(rep(0, nrow(train.dc))))
+train.dc <- cbind(train.dc, sum.train)
+train.dc$sum.train <- rowSums(train.dc[1:(ncol(train.dc)-2)])
+train.dc<- train.dc[which(train.dc$sum.train>0),]
+train.dc<-within(train.dc, rm(sum.train))
+
+#class vector 
+train.c <- as.character(train.dc[,ncol(train.dc)-1])
 
 ############################
 ## Test Set

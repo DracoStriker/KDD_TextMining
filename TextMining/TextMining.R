@@ -77,6 +77,7 @@ overall.train <- Corpus(VectorSource(c(content(mistery.train), content(romance.t
 # TfIdf weight
 dtm <- DocumentTermMatrix(overall.train, control = list(WordLengths = c(4, 15), bounds = list(global=c(2, Inf), local=c(2, Inf)), weighting = weightTfIdf))
 
+
 # remove sparse terms (95% sparcity)
 dtm <- removeSparseTerms(dtm, 0.99)
 

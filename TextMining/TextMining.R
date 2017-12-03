@@ -75,10 +75,10 @@ overall.train <- Corpus(VectorSource(c(content(mistery.train), content(romance.t
 # 3 global occurences
 # 2 local ocurrences
 # TfIdf weight
-dtm <- DocumentTermMatrix(overall.train, control = list(WordLengths = c(4, 15), bounds = list(global=c(3, Inf), local=c(2, Inf)), weighting = weightTfIdf))
+dtm <- DocumentTermMatrix(overall.train, control = list(WordLengths = c(4, 15), bounds = list(global=c(2, Inf), local=c(2, Inf)), weighting = weightTfIdf))
 
 # remove sparse terms (95% sparcity)
-dtm <- removeSparseTerms(dtm, 0.95)
+dtm <- removeSparseTerms(dtm, 0.99)
 
 # MAtrix statistics
 #dim(dtm)
@@ -88,8 +88,8 @@ dtm <- removeSparseTerms(dtm, 0.95)
 train.d <- as.data.frame(as.matrix(dtm))
 
 # Shuffle train data
-set.seed(423)
-train.d <- train.d[sample(1:nrow(train.d)),]
+#set.seed(423)
+#train.d <- train.d[sample(1:nrow(train.d)),]
 
 # Generate lexicon
 lexicon <- names(train.d)
@@ -105,7 +105,7 @@ train.c <- c(c(rep("Mistery", length(mistery.train)), c(rep("Romance", length(ro
 train.dc <- cbind(train.d, class=train.c)
 
 # Shuffle data
-train.dc <- train.dc[sample(nrow(train.dc)),]
+#train.dc <- train.dc[sample(nrow(train.dc)),]
 
 #Remove zero lines! 
 sum.train <- (c(rep(0, nrow(train.dc))))
@@ -115,7 +115,8 @@ train.dc<- train.dc[which(train.dc$sum.train>0),]
 train.dc<-within(train.dc, rm(sum.train))
 
 #class vector 
-train.c <- as.character(train.dc[,ncol(train.dc)-1])
+train.c <- as.character(train.dc[,ncol(train.dc)])
+train.d<-within(train.dc, rm(class))
 
 ############################
 ## Test Set
@@ -128,6 +129,7 @@ overall.test <- Corpus(VectorSource(c(content(mistery.test), content(romance.tes
 test.d <- as.data.frame(as.matrix(DocumentTermMatrix(overall.test, control = list(dictionary = lexicon))))
 
 # Class labels for the test set
+
 test.c <- c(c(rep("Mistery", length(mistery.test)), c(rep("Romance", length(romance.test)))))
 
 ############################

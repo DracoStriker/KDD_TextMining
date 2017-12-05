@@ -27,6 +27,11 @@ preprocess.simple <- function(d) {
   # remove stop words (174)
   d <- tm_map (d, removeWords, stopwords("english"))
   
+  # remove common words
+  d <- tm_map (d, removeWords, c("film", "movie", "one", "really", "story",
+                                 "like", "even", "time", "can", "cast",
+                                 "good", "work", "character", "see", "now"))
+  
   # remove punctuation
   d <- tm_map (d, removePunctuation, preserve_intra_word_dases = TRUE)
   
@@ -163,8 +168,8 @@ dtree <- train (train.d, train.c, method ='rpart')
 ## Testing
 ############################
 
-run.test <- function(model, test.c, test.d) {
-  model.table <- table(test.c, predict(model, test.d))
+run.test <- function(prediction, test.c, test.d) {
+  model.table <- table(test.c, prediction)
   print(model.table)
   right <- model.table[1,1]+model.table[2,2]
   wrong <- model.table[1,2]+model.table[2,1]
@@ -172,12 +177,21 @@ run.test <- function(model, test.c, test.d) {
   accuracy
 }
 
-run.test(knn, test.c, test.d)
+knn.prediction <- predict(knn, test.d)
+nnets.prediction <- predict(nnets, test.d)
+dtree.prediction <- predict(dtree, test.d)
+
+voting.table <- data.frame(col1=c(knn.prediction), col2=c(nnets.prediction), col3=c(dtree.prediction))
+voting.prediction <- rowSums(voting.table)
+voting.prediction <- sapply(voting.prediction, function(x) ifelse(x <= 4, "Mystery", "Romance"))
+
+run.test(knn.prediction, test.c, test.d)
 #print.results(nbayes, test.c, test.d)
-run.test(nnets, test.c, test.d)
+run.test(nnets.prediction, test.c, test.d)
 #print.results(svmRad, test.c, test.d)
 #print.results(svmLin2, test.c, test.d)
-run.test(dtree, test.c, test.d)
+run.test(dtree.prediction, test.c, test.d)
+run.test(voting.prediction, test.c, test.d)
 
 # Information gain
 #info.terms <- information.gain(class ~., train.d)

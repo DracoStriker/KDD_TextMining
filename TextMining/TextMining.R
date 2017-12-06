@@ -149,17 +149,18 @@ set.seed(565)
 knn <- train(train.d, train.c, method = 'knn')
 
 # Naive Bayes
-#NB <- make_Weka_classifier("weka/classifiers/bayes/NaiveBayes")
-#nbayes <- NB(class ~., train.dc)
+NB <- make_Weka_classifier("weka/classifiers/bayes/NaiveBayes")
+nbayes <- NB(class ~., train.dc)
+table(test.c, predict(nbayes, test.d))
 
 # Neural Networks
 nnets <- train(train.d, train.c, method = 'nnet')
 
 # Support Vector Machine (Radial Kernel)
-#svmRad <- train(train.d, train.c, method = 'svmRadial')
+svmRad <- train(train.d, train.c, method = 'svmRadial')
 
 # Support Vector Machine (Linear Kernel)
-#svmLin2 <- train(train.d, train.c, method = 'svmLinear2')
+svmLin2 <- train(train.d, train.c, method = 'svmLinear2')
 
 # Decision Tree
 dtree <- train (train.d, train.c, method ='rpart')
@@ -186,10 +187,10 @@ voting.prediction <- rowSums(voting.table)
 voting.prediction <- sapply(voting.prediction, function(x) ifelse(x <= 4, "Mystery", "Romance"))
 
 run.test(knn.prediction, test.c, test.d)
-#print.results(nbayes, test.c, test.d)
+run.test(nbayes, test.c, test.d)
 run.test(nnets.prediction, test.c, test.d)
-#print.results(svmRad, test.c, test.d)
-#print.results(svmLin2, test.c, test.d)
+run.test(svmRad, test.c, test.d)
+run.test(svmLin2, test.c, test.d)
 run.test(dtree.prediction, test.c, test.d)
 run.test(voting.prediction, test.c, test.d)
 

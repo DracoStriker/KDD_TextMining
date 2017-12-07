@@ -24,14 +24,6 @@ preprocess.simple <- function(d) {
   d <- tm_map (d, makewhitespace, "@")
   d <- tm_map (d, makewhitespace, "\\|")
   
-  # remove stop words (174)
-  d <- tm_map (d, removeWords, stopwords("english"))
-  
-  # remove common words
-  d <- tm_map (d, removeWords, c("film", "movie", "one", "really", "story",
-                                 "like", "even", "time", "can", "cast",
-                                 "good", "work", "character", "see", "now"))
-  
   # remove punctuation
   d <- tm_map (d, removePunctuation, preserve_intra_word_dases = TRUE)
   
@@ -44,12 +36,25 @@ preprocess.simple <- function(d) {
   # remove white spaces
   d <- tm_map (d, stripWhitespace)
   
+  # remove stop words (174)
+  d <- tm_map (d, removeWords, stopwords("english"))
+  
+  # remove common words
+  #d <- tm_map (d, removeWords, c("film", "movie", "one", "really", "story",
+  #                               "like", "even", "time", "can", "cast",
+  #                               "good", "work", "character", "see", "now",
+  #                               "just", "characters"))
+  
   d
 }
 
 # Create the corpus
 mistery <- Corpus(DirSource("mistery"), readerControl = list(reader=readPlain, language="en"))
 romance <- Corpus(DirSource("romance"), readerControl = list(reader=readPlain, language="en"))
+
+# Pre-processing 
+mistery <- preprocess.simple(mistery)
+romance <- preprocess.simple(romance)
 
 #create Train and Test set for group1
 mistery.ri <- sort(sample(length(mistery), length(mistery)*.7))
@@ -67,14 +72,8 @@ length(mistery.test) #896
 length(romance.train) #2718
 length(romance.test) #1166
 
-# Pre-processing 
-mistery.train <- preprocess.simple(mistery.train)
-romance.train <- preprocess.simple(romance.train)
-
 # Concat corpus train
 overall.train <- Corpus(VectorSource(c(content(mistery.train), content(romance.train))))
-
-
 
 # Generate document term matrix
 # Words between 4 and 15 letters
@@ -82,7 +81,6 @@ overall.train <- Corpus(VectorSource(c(content(mistery.train), content(romance.t
 # 2 local ocurrences
 # TfIdf weight
 dtm <- DocumentTermMatrix(overall.train, control = list(WordLengths = c(4, 15), bounds = list(global=c(2, Inf), local=c(2, Inf)), weighting = weightTfIdf))
-
 
 # remove sparse terms (95% sparcity)
 dtm <- removeSparseTerms(dtm, 0.99)
@@ -169,7 +167,7 @@ dtree <- train (train.d, train.c, method ='rpart')
 ## Testing
 ############################
 
-run.test <- function(prediction, test.c, test.d) {
+run.test <- function(prediction, test.c) {
   model.table <- table(test.c, prediction)
   print(model.table)
   right <- model.table[1,1]+model.table[2,2]
@@ -179,20 +177,23 @@ run.test <- function(prediction, test.c, test.d) {
 }
 
 knn.prediction <- predict(knn, test.d)
+nbayes.prediction <- predict(nbayes, test.d)
 nnets.prediction <- predict(nnets, test.d)
+svmRad.prediction <- predict(svmRad, test.d)
+svmLin2.prediction <- predict(svmLin2, test.d)
 dtree.prediction <- predict(dtree, test.d)
 
-voting.table <- data.frame(col1=c(knn.prediction), col2=c(nnets.prediction), col3=c(dtree.prediction))
+voting.table <- data.frame(col1=c(nbayes.prediction), col2=c(nnets.prediction), col3=c(dtree.prediction))
 voting.prediction <- rowSums(voting.table)
 voting.prediction <- sapply(voting.prediction, function(x) ifelse(x <= 4, "Mystery", "Romance"))
 
-run.test(knn.prediction, test.c, test.d)
-run.test(nbayes, test.c, test.d)
-run.test(nnets.prediction, test.c, test.d)
-run.test(svmRad, test.c, test.d)
-run.test(svmLin2, test.c, test.d)
-run.test(dtree.prediction, test.c, test.d)
-run.test(voting.prediction, test.c, test.d)
+run.test(knn.prediction, test.c)
+run.test(nbayes.prediction, test.c)
+run.test(nnets.prediction, test.c)
+run.test(svmRad.prediction, test.c)
+run.test(svmLin2.prediction, test.c)
+run.test(dtree.prediction, test.c)
+run.test(voting.prediction, test.c)
 
 # Information gain
 #info.terms <- information.gain(class ~., train.d)

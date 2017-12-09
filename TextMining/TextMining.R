@@ -85,7 +85,7 @@ dtm <- DocumentTermMatrix(overall.train, control = list(WordLengths = c(4, 15), 
 # remove sparse terms (95% sparcity)
 dtm <- removeSparseTerms(dtm, 0.99)
 
-# MAtrix statistics
+dtm# MAtrix statistics
 #dim(dtm)
 #colnames (dtm) [1:20]
 
@@ -137,69 +137,6 @@ test.d <- as.data.frame(as.matrix(DocumentTermMatrix(overall.test, control = lis
 
 test.c <- c(c(rep("Mistery", length(mistery.test)), c(rep("Romance", length(romance.test)))))
 
-############################
-## Training
-############################
-
-set.seed(565)
-
-# k-Nearest Neighbor
-knn <- train(train.d, train.c, method = 'knn')
-
-# Naive Bayes
-NB <- make_Weka_classifier("weka/classifiers/bayes/NaiveBayes")
-nbayes <- NB(class ~., train.dc)
-table(test.c, predict(nbayes, test.d))
-
-# Neural Networks
-nnets <- train(train.d, train.c, method = 'nnet')
-
-# Support Vector Machine (Radial Kernel)
-svmRad <- train(train.d, train.c, method = 'svmRadial')
-
-# Support Vector Machine (Linear Kernel)
-svmLin2 <- train(train.d, train.c, method = 'svmLinear2')
-
-# Decision Tree
-dtree <- train (train.d, train.c, method ='rpart')
-
-############################
-## Testing
-############################
-
-run.test <- function(prediction, test.c) {
-  model.table <- table(test.c, prediction)
-  print(model.table)
-  right <- model.table[1,1]+model.table[2,2]
-  wrong <- model.table[1,2]+model.table[2,1]
-  accuracy <- right/(right + wrong)
-  accuracy
-}
-
-knn.prediction <- predict(knn, test.d)
-nbayes.prediction <- predict(nbayes, test.d)
-nnets.prediction <- predict(nnets, test.d)
-svmRad.prediction <- predict(svmRad, test.d)
-svmLin2.prediction <- predict(svmLin2, test.d)
-dtree.prediction <- predict(dtree, test.d)
-
-voting.table <- data.frame(col1=c(nbayes.prediction), col2=c(nnets.prediction), col3=c(dtree.prediction))
-voting.prediction <- rowSums(voting.table)
-voting.prediction <- sapply(voting.prediction, function(x) ifelse(x <= 4, "Mystery", "Romance"))
-
-run.test(knn.prediction, test.c)
-run.test(nbayes.prediction, test.c)
-run.test(nnets.prediction, test.c)
-run.test(svmRad.prediction, test.c)
-run.test(svmLin2.prediction, test.c)
-run.test(dtree.prediction, test.c)
-run.test(voting.prediction, test.c)
-
-# Information gain
-#info.terms <- information.gain(class ~., train.d)
-#which(info.terms$attr_importance > info.min)
-#rownames(info.terms)
-
 #WORD CLOUD-------------
 romance.train.dtm = DocumentTermMatrix(romance.train)
 romance.train.df = as.data.frame(as.matrix(romance.train.dtm))
@@ -212,3 +149,124 @@ mistery.train.df = as.data.frame(as.matrix(mistery.train.dtm))
 sort.mistery.train.df = sort(colSums(mistery.train.df), decreasing = TRUE)
 mistery.train.wc = data.frame(word = names(sort.mistery.train.df), freq = sort.mistery.train.df)
 wordcloud2(head(mistery.train.wc, 100), color = 'random-dark', fontWeight = 'normal', fontFamily = 'Consolas')
+
+############################
+## Training
+############################
+
+set.seed(565)
+
+# k-Nearest Neighbor
+knn <- train(train.d, train.c, method = 'knn')
+
+# Naive Bayes
+  NB <- make_Weka_classifier("weka/classifiers/bayes/NaiveBayes")
+  nbayes <- NB(class ~., train.dc)
+  test.table.nbayes<-table(test.c, predict(nbayes, test.d))
+  
+  # Neural Networks
+  nnets <- train(train.d, train.c, method = 'nnet')
+  
+  # Support Vector Machine (Radial Kernel)
+  svmRad <- train(train.d, train.c, method = 'svmRadial')
+  
+  # Support Vector Machine (Linear Kernel)
+  svmLin2 <- train(train.d, train.c, method = 'svmLinear2')
+  
+  # Decision Tree
+  dtree <- train (train.d, train.c, method ='rpart')
+
+############################
+## Testing
+############################
+  run.test <- function(prediction, test.c) {
+    model.table <- table(test.c, prediction)
+    print(model.table)
+    right <- model.table[1,1]+model.table[2,2]
+    wrong <- model.table[1,2]+model.table[2,1]
+    accuracy <- right/(right + wrong)
+    accuracy
+    print(accuracy)
+    return(model.table)
+  }
+  
+  metrics <- function(test.table)
+  {
+    
+    TP1<-TN2 <-test.table[1,1]
+    FN1<-FP2 <-test.table[1,2]
+    FP1<-FN2 <-test.table[2,1]
+    TN1<-TP2 <-test.table[2,2]
+    #print(TP1,FN1,FP1,TN1)
+    
+    error.rate<-(FP1 + FN1) / (TP1 + TN1 + FP1 + FN1)
+    precision1<-TP1/(TP1+FP1)
+    precision2<-TP2/(TP2+FP2)
+    
+    recall1<-TP1/(TP1+FN1)
+    recall2<-TP2/(TP2+FN2)
+    
+    f1.1<-2*precision1*recall1/(precision1+recall1)
+    f1.2<-2*precision2*recall2/(precision2+recall2)
+    
+    MacroP<-(precision1+precision2)/2                        
+    MacroR<-(recall1+recall2)/2
+    
+    MicroP<-(TP1+TP2)/(TP1+TP2+FP1+FP2)
+    MicroR<-(TP1+TP2)/(TP1+TP2+FN1+FN2)
+    
+    metrics<-c(TP1,FN1,FP1,TN1,error.rate,precision1,precision2,recall1,recall2,f1.1,f1.2,MacroP,MacroR,MicroP,MicroR)
+    return (metrics)
+  }
+  
+  
+  
+knn.prediction <- predict(knn, test.d)
+nbayes.prediction <- predict(nbayes, test.d)
+nnets.prediction <- predict(nnets, test.d)
+svmRad.prediction <- predict(svmRad, test.d)
+svmLin2.prediction <- predict(svmLin2, test.d)
+dtree.prediction <- predict(dtree, test.d)
+
+voting.table <- data.frame(col1=c(nbayes.prediction), col2=c(nnets.prediction), col3=c(dtree.prediction))
+voting.prediction <- rowSums(voting.table)
+voting.prediction <- sapply(voting.prediction, function(x) ifelse(x <= 4, "Mystery", "Romance"))
+
+test.table.knn <-run.test(knn.prediction, test.c)
+#test.table.nbayes <-run.test(nbayes.prediction, test.c)
+test.table.nnets<-run.test(nnets.prediction, test.c)
+test.table.svmRad<-run.test(svmRad.prediction, test.c)
+test.table.svmLin2<-run.test(svmLin2.prediction, test.c)
+test.table.dtree<-run.test(dtree.prediction, test.c)
+test.table.voting<-run.test(voting.prediction, test.c)
+
+# Information gain
+#info.terms <- information.gain(class ~., train.d)
+#which(info.terms$attr_importance > info.min)
+#rownames(info.terms)
+
+
+
+#RESULTS EVALUATION------
+results <-matrix(0, 7, 15)
+colnames(results)<-(c("TP1", "FN1" ,"FP1", "TN1", "error.rate", "precision1", "precision2", "recall1", "recall2", "f1.1", "f1.2", "MacroP", "MacroR", "MicroP", "MicroR"))
+
+results.knn <-metrics(test.table.knn)
+results.nbayes <-metrics(test.table.nbayes)
+results.nnets <-metrics(test.table.nnets)
+results.svmRad <-metrics(test.table.svmRad)
+results.svmLin2 <-metrics(test.table.svmLin2)
+results.dtree <-metrics(test.table.dtree)
+results.voting <-metrics(test.table.voting)
+
+results[1,]<-results.knn
+results[2,]<-results.nbayes
+results[3,]<-results.nnets
+results[4,]<-results.svmRad
+results[5,]<-results.svmLin2
+results[6,]<-results.dtree
+results[7,]<-results.voting
+
+rownames(results)<-c("knn","nbayes","nnets","svmRad","svmLin2","dtree","voting")
+
+
